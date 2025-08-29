@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ganpati Invitation</title>
+  <style>
+    :root{
+      --bg:#fff8ef; --paper:#fffdf8; --ink:#2b2b2b;
+      --saffron:#e86f2d; --gild:#f7c873; --shadow:0 14px 40px rgba(0,0,0,.22);
+      --radius:22px; --w:420px; --h:640px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Devanagari";
+      background: radial-gradient(1200px 700px at 20% 10%, #ffe7cc 0%, var(--bg) 40%, #fff 80%);
+      display:grid; place-items:center; padding:20px; color:var(--ink);
+    }
+    .scene{ perspective:1600px }
+    .card{
+      position:relative; width:min(92vw, var(--w)); height:min(160vw, var(--h));
+      border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+      background:var(--paper); border:1px solid #f0e8d8;
+    }
+
+    /* Cover (tap to open) */
+    .cover{
+      position:absolute; inset:0; transform-origin:left center; transform-style:preserve-3d;
+      transition: transform 900ms cubic-bezier(.2,.7,0,1);
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.05), transparent 24%),
+        radial-gradient(120% 80% at 110% -10%, rgba(0,0,0,.18), transparent 55%),
+        linear-gradient(135deg, #ffa467 0%, var(--saffron) 60%, #d85b13 100%);
+      color:#fff;
+    }
+    .card.open .cover{ transform: rotateY(-178deg) }
+    .cover-inner{ position:absolute; inset:0; padding:28px; display:flex; flex-direction:column; justify-content:space-between }
+    .title{ text-align:center; display:grid; place-items:center; gap:8px }
+    h1{ margin:0; font-size:clamp(26px, 5.6vw, 36px); letter-spacing:.4px; text-shadow:0 6px 18px rgba(0,0,0,.28) }
+    .mantra{ font-weight:700; letter-spacing:.6px; text-align:center }
+    .band{ height:12px; border-radius:999px; background:linear-gradient(90deg, var(--gild), #fff1ad, var(--gild)); box-shadow:inset 0 2px 6px rgba(0,0,0,.18); opacity:.95; margin-top:2px }
+    .open-hint{ position:absolute; right:18px; bottom:16px; font-weight:700; font-size:13px; opacity:.9 }
+    .cover-hero{
+      width:min(55vw, 240px); height:auto; border-radius:18px;
+      box-shadow:0 12px 24px rgba(0,0,0,.2);
+    }
+    .subtitle{ margin:0; font-weight:600; opacity:.98; text-align:center; font-size:clamp(14px,2.8vw,16px) }
+    .cover::after{
+      content:""; position:absolute; inset:0; background:linear-gradient(180deg, #fffdf6 0%, #fff8ee 100%);
+      transform: rotateY(180deg); backface-visibility:hidden; border-left:1px solid #efeadf;
+    }
+
+    /* Inside */
+    .inside{ position:absolute; inset:0; padding:30px 28px 86px; display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center }
+    .heading{ font-size:clamp(22px, 4.5vw, 30px); margin:4px 0 0 }
+    .divider{ width:88%; height:1px; background:linear-gradient(90deg, transparent, var(--gild), transparent); margin:8px 0 8px }
+    .details{ text-align:center; width:min(92%, 360px); line-height:1.65; font-size:16px }
+    .details p{ margin:10px 0 }
+    .label{ font-weight:700 }
+    .note{ opacity:.85; margin-top:4px }
+
+    /* RSVP */
+    .rsvp{ position:absolute; left:0; right:0; bottom:18px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap }
+    .btn{ cursor:pointer; border:none; padding:10px 16px; border-radius:999px; font-weight:700; box-shadow:0 8px 18px rgba(0,0,0,.1) }
+    .btn.primary{ background:linear-gradient(135deg, var(--saffron), #ffa365); color:#fff }
+    .btn.ghost{ background:#f3f3f3 }
+    #toast{ position:absolute; bottom:72px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px 14px; border-radius:999px; font-weight:700; font-size:14px; box-shadow:0 8px 18px rgba(0,0,0,.2); display:none }
+
+    /* Admin overlay */
+    #admin{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center }
+    #admin .panel{ width:min(92vw,520px); background:#fff; border-radius:16px; box-shadow:var(--shadow); padding:18px; font-size:15px }
+    #admin h3{ margin:0 0 8px 0 }
+    #admin table{ width:100%; border-collapse:collapse; margin:10px 0 12px }
+    #admin td{ padding:6px 8px; border-bottom:1px solid #eee }
+    #admin .actions{ display:flex; gap:8px; justify-content:flex-end }
+
+    /* PIN prompt */
+    #pinPrompt{ position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:center; justify-content:center }
+    #pinPrompt .panel{ width:300px; background:#fff; border-radius:12px; box-shadow:var(--shadow); padding:16px; text-align:center }
+    input[type="password"]{ width:100%; padding:10px; border:1px solid #ddd; border-radius:8px }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="card" id="card">
+      <!-- Inside (after opening) -->
+      <div class="inside">
+        <div class="heading"><strong>Ganpati Bappa Morya!</strong></div>
+        <div class="divider"></div>
+
+        <div class="heading" style="font-size:30px; font-weight:800;">प्राणप्रतिष्ठा आणि आरती</div>
+        <div class="divider"></div>
+
+        <div class="details">
+          <p><span class="label">Date:</span> Saturday, 6 September 2025</p>
+          <p><span class="label">Time:</span> 10:30 AM</p>
+          <p><span class="label">Venue:</span> 46 Fenway St, Apt 7, Boston 02215</p>
+          <p><span class="label">Dress code:</span> Traditional</p>
+          <p class="note" style="margin-top:12px;">Join us for aarti, mahaprasad &amp; good vibes.</p>
+        </div>
+
+        <!-- YES / MAYBE / NO (local-only logging) -->
+        <div class="rsvp" id="rsvp">
+          <button class="btn primary" onclick="sendRSVP('Yes')">Yes</button>
+          <button class="btn ghost"   onclick="sendRSVP('Maybe')">Maybe</button>
+          <button class="btn ghost"   onclick="sendRSVP('No')">No</button>
+        </div>
+        <div id="toast">Recorded!</div>
+      </div>
+
+      <!-- Front cover -->
+      <div class="cover" id="cover" role="button" aria-label="Open invitation">
+        <div class="cover-inner">
+          <div class="mantra">श्री गणेशाय नमः</div>
+          <div class="title">
+            <img class="cover-hero" src="ganesha.gif" alt="Ganesh" onerror="this.style.display='none'">
+            <p class="subtitle">Kate &amp; Joshi invite you for</p>
+            <h1 style="font-weight:800; margin:0;">प्राणप्रतिष्ठा आणि आरती</h1>
+            <div class="band" aria-hidden="true"></div>
+          </div>
+          <div class="open-hint">Tap to open →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin overlay -->
+  <div id="admin">
+    <div class="panel">
+      <h3>RSVP Summary (private)</h3>
+      <table>
+        <tr><td>Yes</td><td id="countYes">0</td></tr>
+        <tr><td>Maybe</td><td id="countMaybe">0</td></tr>
+        <tr><td>No</td><td id="countNo">0</td></tr>
+        <tr><td>Total</td><td id="countTotal">0</td></tr>
+      </table>
+      <div style="max-height:180px; overflow:auto; border:1px solid #eee; border-radius:8px; padding:8px;">
+        <div id="recent"></div>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" onclick="exportCSV()">Export CSV</button>
+        <button class="btn ghost" onclick="if(confirm('Clear all saved responses?')){localStorage.removeItem(KEY); updateAdmin();}">Reset</button>
+        <button class="btn primary" onclick="closeAdmin()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIN prompt -->
+  <div id="pinPrompt">
+    <div class="panel">
+      <div style="font-weight:700; margin-bottom:8px;">Admin access</div>
+      <input type="password" id="pin" placeholder="Enter PIN (default 108)">
+      <div class="actions" style="margin-top:10px;">
+        <button class="btn ghost" onclick="closePin()">Cancel</button>
+        <button class="btn primary" onclick="checkPin()">Open</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Card open/close
+    const card = document.getElementById('card');
+    const cover = document.getElementById('cover');
+    function openCard(){ card.classList.add('open'); }
+    function closeCard(){ card.classList.remove('open'); }
+    cover.addEventListener('click', ()=>{ if(!card.classList.contains('open')) openCard(); });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeCard(); });
+
+    // RSVP storage (local only; kiosk mode)
+    const KEY = 'ganpati_rsvps';
+    const PIN = '108'; // change if you want another admin PIN
+
+    function getData(){ try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch{ return []; } }
+    function setData(arr){ localStorage.setItem(KEY, JSON.stringify(arr)); }
+
+    function sendRSVP(choice){
+      const arr = getData();
+      arr.push({ choice, ts: new Date().toISOString() });
+      setData(arr);
+      showToast(`Recorded: ${choice}`);
+      [...document.querySelectorAll("#rsvp .btn")].forEach(b=>b.disabled=true);
+      setTimeout(()=>[...document.querySelectorAll("#rsvp .btn")].forEach(b=>b.disabled=false), 1500);
+    }
+
+    function showToast(msg){
+      const t = document.getElementById("toast");
+      t.textContent = msg; t.style.display = "block";
+      setTimeout(()=> t.style.display = "none", 1600);
+    }
+
+    // Admin view
+    const admin = document.getElementById('admin');
+    const pinPrompt = document.getElementById('pinPrompt');
+    function openAdmin(){ admin.style.display='flex'; updateAdmin(); }
+    function closeAdmin(){ admin.style.display='none'; }
+    function openPin(){ pinPrompt.style.display='flex'; document.getElementById('pin').value=''; setTimeout(()=>document.getElementById('pin').focus(), 0); }
+    function closePin(){ pinPrompt.style.display='none'; }
+
+    function checkPin(){
+      const val = document.getElementById('pin').value.trim();
+      if(val === PIN){ closePin(); openAdmin(); } else { alert('Wrong PIN'); }
+    }
+
+    // Shortcut: Alt + A opens admin PIN prompt
+    document.addEventListener('keydown', e=>{
+      if(e.altKey && (e.key==='a' || e.key==='A')) openPin();
+    });
+
+    function updateAdmin(){
+      const arr = getData();
+      const yes = arr.filter(r=>r.choice==='Yes').length;
+      const maybe = arr.filter(r=>r.choice==='Maybe').length;
+      const no = arr.filter(r=>r.choice==='No').length;
+      document.getElementById('countYes').textContent = yes;
+      document.getElementById('countMaybe').textContent = maybe;
+      document.getElementById('countNo').textContent = no;
+      document.getElementById('countTotal').textContent = arr.length;
+      document.getElementById('recent').innerHTML =
+        (arr.slice(-50).reverse().map(r=>`<div>${new Date(r.ts).toLocaleString()} — <b>${r.choice}</b></div>`).join('')) || '<em>No responses yet.</em>';
+    }
+
+    function exportCSV(){
+      const arr = getData();
+      const rows = [['timestamp','choice']].concat(arr.map(r=>[r.ts, r.choice]));
+      const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = 'ganpati_rsvp.csv';
+      a.click();
+    }
+  </script>
+</body>
+</html>
